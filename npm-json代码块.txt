@@ -11,9 +11,82 @@ gzip_proxied any;
 gzip_vary on;
 # 禁止压缩非常小的文件
 gzip_disable "msie6";
+#////////////////////////////////////////////////////////
+client_max_body_size 0;
+sendfile on;
+tcp_nopush on;
+tcp_nodelay on;
+gzip on;
+gzip_disable "msie6";
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 6;
+gzip_buffers 16 8k;
+gzip_http_version 1.1;
+gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+location / {
+            proxy_pass http://localhost:2283;
+            # Preserve the original headers
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Host $host;
+
+            # Support WebSocket
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Host $host;
+
+            # 优化缓冲设置
+
+            # 对于WebSocket连接，禁用代理缓冲
+            proxy_buffering off;
+            proxy_request_buffering off;
+        }
+location /.well-known/matrix/server {
+    default_type application/json;  # 设置返回类型为 JSON   联邦通讯
+    add_header Access-Control-Allow-Origin *;  # 允许跨域访问
+    return 200 '{"m.server": "example.com:443"}';  
+}
+location /.well-known/matrix/client {
+           access_log off;
+           add_header Access-Control-Allow-Origin *;
+            default_type application/json;
+            return 200 '{"m.homeserver": {"base_url": "https://example.com"}}';
+}
+
+//////////////////////////////////////////////////
+location / {
+    proxy_pass http://127.0.0.1:8008;
+    # Preserve the original headers
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+
+    # Support WebSocket
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Host $host;
+}
+location /.well-known/matrix/server {
+    default_type application/json;  # 设置返回类型为 JSON   联邦通讯
+    add_header Access-Control-Allow-Origin *;  # 允许跨域访问
+    return 200 '{"m.server": "example.com:443"}';  
+}
+location /.well-known/matrix/client {
+           access_log off;
+           add_header Access-Control-Allow-Origin *;
+            default_type application/json;
+            return 200 '{"m.homeserver": {"base_url": "https://example.com"}}';
+}
+
+
 
 #优化代码
-/////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////
 代码块
 
 dendrite 服务器反向代理
@@ -35,13 +108,13 @@ location / {
 location /.well-known/matrix/server {
     default_type application/json;  # 设置返回类型为 JSON   联邦通讯
     add_header Access-Control-Allow-Origin *;  # 允许跨域访问
-    return 200 '{"m.server": "test.omoo.top:443"}';  
+    return 200 '{"m.server": "example.com"}';  
 }
 location /.well-known/matrix/client {
            access_log off;
            add_header Access-Control-Allow-Origin *;
             default_type application/json;
-            return 200 '{"m.homeserver": {"base_url": "https://mioo.top"}, "org.matrix.msc3575.proxy": {"url": "https://sync.mioo.top"}}';
+            return 200 '{"m.homeserver": {"base_url": "https://example.com"}, "org.matrix.msc3575.proxy": {"url": "https://example.com"}}';
     }
 
 
@@ -63,7 +136,7 @@ location / {
             access_log off;
             add_header Access-Control-Allow-Origin *;
             default_type application/json;
-            return 200 '{"m.homeserver": {"base_url": "https://mioo.top"}, "org.matrix.msc3575.proxy": {"url": "https://sync.mioo.top"}}';
+            return 200 '{"m.homeserver": {"base_url": "https://example.com"}, "org.matrix.msc3575.proxy": {"url": "https://example.com"}}';
     }
 
 /////////////////////////////////////////////////////////////
@@ -94,13 +167,13 @@ location / {
 location /.well-known/matrix/server {
     default_type application/json;  # 设置返回类型为 JSON   联邦通讯
     add_header Access-Control-Allow-Origin *;  # 允许跨域访问
-    return 200 '{"m.server": "matrix.utop.top:443"}';  
+    return 200 '{"m.server": "example.com:443"}';  
 }
 location /.well-known/matrix/client {
            access_log off;
            add_header Access-Control-Allow-Origin *;
             default_type application/json;
-            return 200 '{"m.homeserver": {"base_url": "https://matrix.utop.top"}, "org.matrix.msc3575.proxy": {"url": "https://msync.utop.top"}}';
+            return 200 '{"m.homeserver": {"base_url": "https://matrix.utop.top"}, "org.matrix.msc3575.proxy": {"url": "https://example.com"}}';
     }
 
 
