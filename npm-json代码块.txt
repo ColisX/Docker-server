@@ -1,0 +1,106 @@
+client_max_body_size 0;
+gzip on;
+gzip_min_length 1024;
+# gzip压缩级别，范围是1-9，数字越大压缩率越高，CPU消耗也越多
+gzip_comp_level 6;
+# 允许的压缩类型
+gzip_types text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+# 对所有请求启用gzip压缩（包括代理的请求）
+gzip_proxied any;
+# 启用对响应头包含"Vary: Accept-Encoding"的响应进行压缩
+gzip_vary on;
+# 禁止压缩非常小的文件
+gzip_disable "msie6";
+
+#优化代码
+/////////////////////////////////////////////////////////
+代码块
+
+dendrite 服务器反向代理
+
+client_max_body_size 0;
+location ~ ^/(client/|_matrix/client/unstable/org.matrix.msc3575/sync) {
+    proxy_pass http://localhost:8888;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+}
+
+location / {
+    proxy_pass http://localhost:8008;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+}
+location /.well-known/matrix/server {
+    default_type application/json;  # 设置返回类型为 JSON   联邦通讯
+    add_header Access-Control-Allow-Origin *;  # 允许跨域访问
+    return 200 '{"m.server": "test.omoo.top:443"}';  
+}
+location /.well-known/matrix/client {
+           access_log off;
+           add_header Access-Control-Allow-Origin *;
+            default_type application/json;
+            return 200 '{"m.homeserver": {"base_url": "https://mioo.top"}, "org.matrix.msc3575.proxy": {"url": "https://sync.mioo.top"}}';
+    }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+sliding sync 滑动同步代理
+
+location / {
+        proxy_pass http://127.0.0.1:8009;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+
+    }
+    
+    location /.well-known/matrix/client {
+            access_log off;
+            add_header Access-Control-Allow-Origin *;
+            default_type application/json;
+            return 200 '{"m.homeserver": {"base_url": "https://mioo.top"}, "org.matrix.msc3575.proxy": {"url": "https://sync.mioo.top"}}';
+    }
+
+/////////////////////////////////////////////////////////////
+
+
+client_max_body_size 0;
+gzip on;
+gzip_min_length 1024;
+gzip_comp_level 6;
+gzip_types text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+gzip_proxied any;
+gzip_vary on;
+gzip_disable "msie6";
+location / {
+    proxy_pass http://127.0.0.1:8008;
+    # Preserve the original headers
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+
+    # Support WebSocket
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Host $host;
+}
+location /.well-known/matrix/server {
+    default_type application/json;  # 设置返回类型为 JSON   联邦通讯
+    add_header Access-Control-Allow-Origin *;  # 允许跨域访问
+    return 200 '{"m.server": "matrix.utop.top:443"}';  
+}
+location /.well-known/matrix/client {
+           access_log off;
+           add_header Access-Control-Allow-Origin *;
+            default_type application/json;
+            return 200 '{"m.homeserver": {"base_url": "https://matrix.utop.top"}, "org.matrix.msc3575.proxy": {"url": "https://msync.utop.top"}}';
+    }
+
+
