@@ -1,0 +1,19 @@
+version: '3'
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:2.9.22
+    container_name: npm
+    network_mode: "host"
+    restart: always
+    ports:
+      - "80:80"      # HTTP
+      - "443:443"    # HTTPS
+      - "81:81"      # Nginx Proxy Manager Web 界面
+    environment:
+      - DB_SQLITE_FILE=/sqlite/database.sqlite  # 使用 SQLite 数据库
+    volumes:
+      - ./sqlite:/sqlite   
+      - ./data:/data
+      - ./site:/etc/nginx/site
+      - ./letsencrypt:/etc/letsencrypt
+      - /root/Certs:/etc/certs
